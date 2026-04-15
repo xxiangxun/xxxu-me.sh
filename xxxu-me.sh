@@ -1,26 +1,33 @@
 #!/bin/bash
 
-# ==================== 快捷命令自动注册 ====================
-if ! grep -q "alias x='bash" /etc/profile; then
-  echo "alias x='bash $0'" >> /etc/profile
+# ==================== 永久修复快捷键 x ====================
+SCRIPT_PATH="/usr/local/bin/xxxu-me"
+if [ ! -f "$SCRIPT_PATH" ]; then
+  cp "$0" "$SCRIPT_PATH"
+  chmod +x "$SCRIPT_PATH"
+fi
+
+if ! grep -q "alias x='xxxu-me'" /etc/profile; then
+  echo "alias x='xxxu-me'" >> /etc/profile
   source /etc/profile
-  echo -e "\033[32m[+] 快捷命令 x 已注册！以后输入 x 即可启动！\033[0m"
+  echo -e "\033[32m[+] 快捷命令 x 已永久注册！\033[0m"
   sleep 1
 fi
 
 clear
 
-# ==================== 你的专属LOGO ====================
+# ==================== 你的LOGO：xxxu ====================
 echo -e "\033[36m
-┌───────────────────────────────────────────┐
-│    _  _    __   __ __     __    ____      │
-│   | || |  /  \ /  \ \   / /   / ___|     │
-│   | || |_ / /\ / /\ \ \ / /   | |  _      │
-│   |__   _| |__| |__| \ V /    | |_| |     │
-│      |_|  \____/\____/ \_/      \____|     │
-│                                            │
-│             xxxu-me 超级工具箱             │
-└───────────────────────────────────────────┘
+┌─────────────────────────────────────────────┐
+│                                     _       │
+│                                    | |      │
+│   __  ___   __  ____ _   ___ _   _| |__    │
+│  \ \/ / | | | |/ / _` | / __| | | | '_ \   │
+│   >  <| |_| |   < (_| | \__ \ |_| | |_) |  │
+│  /_/\_\\__,_|_|\_\__,_| |___/\__,_|_.__/   │
+│                                             │
+│                  xxxu 超级工具箱              │
+└─────────────────────────────────────────────┘
 \033[0m"
 
 # ==================== 主菜单 ====================
@@ -57,36 +64,30 @@ esac
 done
 }
 
-# ================== 【已填好你的 GitHub 地址】 ==================
+# ================== 脚本更新 ==================
 update_script() {
 clear
 echo -e "\033[33m=== 从 GitHub 更新脚本 ===\033[0m"
-
 GITHUB_URL="https://raw.githubusercontent.com/xxiangxun/xxxu-me.sh/refs/heads/main/xxxu-me.sh"
-
-curl -sL $GITHUB_URL -o $0
-chmod +x $0
-echo -e "\033[32m[√] 脚本已从 GitHub 更新完成！\033[0m"
-read -p "按回车返回菜单..."
+curl -sL $GITHUB_URL -o /usr/local/bin/xxxu-me
+chmod +x /usr/local/bin/xxxu-me
+echo -e "\033[32m[√] 更新完成！输入 x 重新启动\033[0m"
+exit 0
 }
 
 # ================== 卸载脚本 ==================
 uninstall_script() {
 clear
-echo -e "\033[31m⚠ 确定要卸载 xxxu-me 工具箱吗？\033[0m"
-read -p "输入 y 确认卸载，其他键取消：" c
+echo -e "\033[31m⚠ 确定要卸载 xxxu 工具箱吗？\033[0m"
+read -p "输入 y 确认卸载：" c
 if [ "$c" = "y" ]; then
-  sed -i '/alias x=/d' /etc/profile
-  rm -f $0
-  echo -e "\033[32m[√] 卸载完成，快捷命令 x 已清除\033[0m"
+  sed -i '/alias x/d' /etc/profile
+  rm -f /usr/local/bin/xxxu-me
+  echo -e "\033[32m[√] 已完全卸载\033[0m"
   exit 0
-else
-  echo -e "\033[32m[√] 已取消卸载\033[0m"
-  sleep 1
 fi
 }
 
-# ================== 功能模块 ==================
 show_info() {
 clear
 echo -e "\033[33m=== 系统信息 ===\033[0m"
@@ -103,56 +104,48 @@ sys_update() {
 clear
 echo -e "\033[33m=== 系统更新中... ===\033[0m"
 apt update -y && apt upgrade -y
-echo -e "\033[32m更新完成！\033[0m"
+echo -e "\033[32m完成！\033[0m"
 read -p "按回车返回..."
 }
 
 sys_clean() {
 clear
-echo -e "\033[33m=== 清理磁盘/日志/缓存... ===\033[0m"
+echo -e "\033[33m=== 清理磁盘... ===\033[0m"
 apt autoremove -y
 apt clean
 journalctl --vacuum-size=100M
 rm -rf /tmp/* /var/tmp/*
-echo -e "\033[32m清理完成！\033[0m"
+echo -e "\033[32m完成！\033[0m"
 read -p "按回车返回..."
 }
 
 docker_menu() {
 clear
 echo -e "\033[33m=== Docker 管理 ===\033[0m"
-echo "1. 查看所有容器"
-echo "2. 重启所有容器"
-echo "3. 查看容器日志"
-echo "4. 删除无用镜像/缓存"
+echo "1. 查看容器  2. 重启所有  3. 日志  4. 清理镜像"
 read -p "选择：" d
 if [ "$d" = 1 ]; then docker ps -a; fi
 if [ "$d" = 2 ]; then docker restart $(docker ps -q 2>/dev/null); fi
-if [ "$d" = 3 ]; then read -p "容器名/ID：" n; docker logs -f $n; fi
+if [ "$d" = 3 ]; then read -p "容器名：" n; docker logs -f $n; fi
 if [ "$d" = 4 ]; then docker system prune -a -f; fi
 read -p "按回车返回..."
 }
 
 ssh_menu() {
 clear
-echo -e "\033[33m=== SSH 安全管理 ===\033[0m"
-echo "1. 修改 SSH 端口"
-echo "2. 禁用密码登录（仅密钥）"
-echo "3. 重启 SSH"
+echo -e "\033[33m=== SSH 管理 ===\033[0m"
+echo "1. 修改端口  2. 禁用密码  3. 重启 SSH"
 read -p "选择：" s
-if [ "$s" = 1 ]; then read -p "新端口：" p; sed -i "s/^#Port 22/Port $p/" /etc/ssh/sshd_config; systemctl restart sshd; fi
+if [ "$s" = 1 ]; then read -p "端口：" p; sed -i "s/^#Port 22/Port $p/" /etc/ssh/sshd_config; systemctl restart sshd; fi
 if [ "$s" = 2 ]; then sed -i 's/^PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config; systemctl restart sshd; fi
 if [ "$s" = 3 ]; then systemctl restart sshd; fi
-echo -e "\033[32m操作完成！\033[0m"
 read -p "按回车返回..."
 }
 
 firewall_menu() {
 clear
-echo -e "\033[33m=== 防火墙管理 ===\033[0m"
-echo "1. 放行端口"
-echo "2. 查看放行列表"
-echo "3. 关闭防火墙"
+echo -e "\033[33m=== 防火墙 ===\033[0m"
+echo "1. 放行端口  2. 状态  3. 关闭防火墙"
 read -p "选择：" f
 if [ "$f" = 1 ]; then read -p "端口：" pt; ufw allow $pt; fi
 if [ "$f" = 2 ]; then ufw status; fi
@@ -161,19 +154,14 @@ read -p "按回车返回..."
 }
 
 install_tools() {
-clear
-echo -e "\033[33m=== 一键安装常用工具 ===\033[0m"
 apt install -y curl wget htop git vim unzip zip sudo
-echo -e "\033[32m安装完成！\033[0m"
+echo -e "\033[32m完成！\033[0m"
 read -p "按回车返回..."
 }
 
 power_menu() {
 clear
-echo -e "\033[33m=== 系统控制 ===\033[0m"
-echo "1. 重启服务器"
-echo "2. 关机"
-echo "3. 注销当前连接"
+echo "1. 重启  2. 关机  3. 注销"
 read -p "选择：" p
 if [ "$p" = 1 ]; then reboot; fi
 if [ "$p" = 2 ]; then poweroff; fi
