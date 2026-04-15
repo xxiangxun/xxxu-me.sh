@@ -1,17 +1,16 @@
 #!/bin/bash
 
-# ==================== AUTO ALIAS x ====================
+# ==================== 快捷命令自动注册 ====================
 if ! grep -q "alias x='bash" /etc/profile; then
   echo "alias x='bash $0'" >> /etc/profile
   source /etc/profile
-  echo -e "\033[32m[+] 快捷键 x 已注册！以后输入 x 即可启动工具箱！\033[0m"
-  sleep 2
+  echo -e "\033[32m[+] 快捷命令 x 已注册！以后输入 x 即可启动！\033[0m"
+  sleep 1
 fi
-# ======================================================
 
 clear
 
-# ==================== 你的专属 LOGO ====================
+# ==================== 你的专属LOGO ====================
 echo -e "\033[36m
 ┌───────────────────────────────────────────┐
 │    _  _    __   __ __     __    ____      │
@@ -24,6 +23,7 @@ echo -e "\033[36m
 └───────────────────────────────────────────┘
 \033[0m"
 
+# ==================== 主菜单 ====================
 main_menu() {
 while true; do
 echo -e "\033[33m┌── 功能菜单 ────────────────────────────────┐\033[0m"
@@ -57,26 +57,28 @@ esac
 done
 }
 
-# ================== 脚本更新 ==================
+# ================== 【已填好你的 GitHub 地址】 ==================
 update_script() {
 clear
-echo -e "\033[33m=== 正在更新 xxxu-me 工具箱 ===\033[0m"
-SCRIPT_PATH="$0"
-curl -sL https://你的域名/xxxu-me.sh -o "$SCRIPT_PATH"
-chmod +x "$SCRIPT_PATH"
-echo -e "\033[32m[√] 脚本更新完成！\033[0m"
+echo -e "\033[33m=== 从 GitHub 更新脚本 ===\033[0m"
+
+GITHUB_URL="https://raw.githubusercontent.com/xxiangxun/xxxu-me.sh/refs/heads/main/xxxu-me.sh"
+
+curl -sL $GITHUB_URL -o $0
+chmod +x $0
+echo -e "\033[32m[√] 脚本已从 GitHub 更新完成！\033[0m"
 read -p "按回车返回菜单..."
 }
 
-# ================== 脚本卸载 ==================
+# ================== 卸载脚本 ==================
 uninstall_script() {
 clear
-echo -e "\033[31m确定要卸载 xxxu-me 工具箱吗？\033[0m"
-read -p "输入 y 确认卸载，其他键取消：" confirm
-if [ "$confirm" = "y" ]; then
-  sed -i '/alias x='\''bash/d' /etc/profile
-  rm -f "$0"
-  echo -e "\033[32m[√] 工具箱已卸载，快捷键 x 已清除\033[0m"
+echo -e "\033[31m⚠ 确定要卸载 xxxu-me 工具箱吗？\033[0m"
+read -p "输入 y 确认卸载，其他键取消：" c
+if [ "$c" = "y" ]; then
+  sed -i '/alias x=/d' /etc/profile
+  rm -f $0
+  echo -e "\033[32m[√] 卸载完成，快捷命令 x 已清除\033[0m"
   exit 0
 else
   echo -e "\033[32m[√] 已取消卸载\033[0m"
@@ -84,6 +86,7 @@ else
 fi
 }
 
+# ================== 功能模块 ==================
 show_info() {
 clear
 echo -e "\033[33m=== 系统信息 ===\033[0m"
@@ -99,8 +102,7 @@ read -p "按回车返回..."
 sys_update() {
 clear
 echo -e "\033[33m=== 系统更新中... ===\033[0m"
-apt update -y
-apt upgrade -y
+apt update -y && apt upgrade -y
 echo -e "\033[32m更新完成！\033[0m"
 read -p "按回车返回..."
 }
@@ -111,8 +113,7 @@ echo -e "\033[33m=== 清理磁盘/日志/缓存... ===\033[0m"
 apt autoremove -y
 apt clean
 journalctl --vacuum-size=100M
-rm -rf /tmp/*
-rm -rf /var/tmp/*
+rm -rf /tmp/* /var/tmp/*
 echo -e "\033[32m清理完成！\033[0m"
 read -p "按回车返回..."
 }
@@ -139,19 +140,9 @@ echo "1. 修改 SSH 端口"
 echo "2. 禁用密码登录（仅密钥）"
 echo "3. 重启 SSH"
 read -p "选择：" s
-if [ "$s" = 1 ]; then
-  read -p "新端口：" p
-  sed -i "s/^#Port 22/Port $p/" /etc/ssh/sshd_config
-  sed -i "s/^Port 22/Port $p/" /etc/ssh/sshd_config
-  systemctl restart sshd
-fi
-if [ "$s" = 2 ]; then
-  sed -i 's/^PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
-  systemctl restart sshd
-fi
-if [ "$s" = 3 ]; then
-  systemctl restart sshd
-fi
+if [ "$s" = 1 ]; then read -p "新端口：" p; sed -i "s/^#Port 22/Port $p/" /etc/ssh/sshd_config; systemctl restart sshd; fi
+if [ "$s" = 2 ]; then sed -i 's/^PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config; systemctl restart sshd; fi
+if [ "$s" = 3 ]; then systemctl restart sshd; fi
 echo -e "\033[32m操作完成！\033[0m"
 read -p "按回车返回..."
 }
