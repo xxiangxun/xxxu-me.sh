@@ -1,30 +1,32 @@
 #!/bin/bash
 
-# ==================== 永久修复快捷键 x ====================
-SCRIPT_PATH="/usr/local/bin/xxxu-me"
-if [ ! -f "$SCRIPT_PATH" ]; then
-  cp "$0" "$SCRIPT_PATH"
-  chmod +x "$SCRIPT_PATH"
-fi
+# ==================== 永久安装到系统 ====================
+INSTALL_PATH="/usr/local/bin/xxxu"
+SCRIPT_URL="https://raw.githubusercontent.com/xxiangxun/xxxu-me.sh/refs/heads/main/xxxu-me.sh"
 
-if ! grep -q "alias x='xxxu-me'" /etc/profile; then
-  echo "alias x='xxxu-me'" >> /etc/profile
+if [ "$1" != "installed" ]; then
+  curl -sL $SCRIPT_URL -o $INSTALL_PATH
+  chmod +x $INSTALL_PATH
+  echo "alias x='xxxu'" >> /etc/profile
   source /etc/profile
-  echo -e "\033[32m[+] 快捷命令 x 已永久注册！\033[0m"
+  echo -e "\033[32m[+] 安装成功！以后输入 x 启动工具箱\033[0m"
   sleep 1
+  exec xxxu installed
+  exit 0
 fi
 
 clear
 
-# ==================== 你的LOGO：xxxu ====================
+# ==================== LOGO ====================
 echo -e "\033[36m
 ┌─────────────────────────────────────────────┐
-│                                     _       │
-│                                    | |      │
-│   __  ___   __  ____ _   ___ _   _| |__    │
-│  \ \/ / | | | |/ / _` | / __| | | | '_ \   │
-│   >  <| |_| |   < (_| | \__ \ |_| | |_) |  │
-│  /_/\_\\__,_|_|\_\__,_| |___/\__,_|_.__/   │
+│                                             │
+│                      _                      │
+│                     | |                     │
+│   __   ___   __ _  _| | ___   ___ _ __      │
+│   \ \ / / | | / _` |/ _` |/ _ \ / _ \ '__| │
+│    \ V /| |_| | (_| | (_| |  __/ |  | |     │
+│     \_/  \__,_|\__,_|\__,_|\___| |  |_|     │
 │                                             │
 │                  xxxu 超级工具箱              │
 └─────────────────────────────────────────────┘
@@ -64,28 +66,24 @@ esac
 done
 }
 
-# ================== 脚本更新 ==================
 update_script() {
-clear
-echo -e "\033[33m=== 从 GitHub 更新脚本 ===\033[0m"
-GITHUB_URL="https://raw.githubusercontent.com/xxiangxun/xxxu-me.sh/refs/heads/main/xxxu-me.sh"
-curl -sL $GITHUB_URL -o /usr/local/bin/xxxu-me
-chmod +x /usr/local/bin/xxxu-me
-echo -e "\033[32m[√] 更新完成！输入 x 重新启动\033[0m"
-exit 0
+  clear
+  echo -e "\033[33m正在更新...\033[0m"
+  curl -sL $SCRIPT_URL -o $INSTALL_PATH
+  chmod +x $INSTALL_PATH
+  echo -e "\033[32m更新完成！请重新输入 x 启动\033[0m"
+  exit 0
 }
 
-# ================== 卸载脚本 ==================
 uninstall_script() {
-clear
-echo -e "\033[31m⚠ 确定要卸载 xxxu 工具箱吗？\033[0m"
-read -p "输入 y 确认卸载：" c
-if [ "$c" = "y" ]; then
-  sed -i '/alias x/d' /etc/profile
-  rm -f /usr/local/bin/xxxu-me
-  echo -e "\033[32m[√] 已完全卸载\033[0m"
-  exit 0
-fi
+  clear
+  read -p "确定卸载？y/n：" c
+  if [ "$c" = "y" ]; then
+    sed -i '/alias x/d' /etc/profile
+    rm -f $INSTALL_PATH
+    echo -e "\033[32m已卸载\033[0m"
+    exit 0
+  fi
 }
 
 show_info() {
@@ -102,7 +100,6 @@ read -p "按回车返回..."
 
 sys_update() {
 clear
-echo -e "\033[33m=== 系统更新中... ===\033[0m"
 apt update -y && apt upgrade -y
 echo -e "\033[32m完成！\033[0m"
 read -p "按回车返回..."
@@ -110,7 +107,6 @@ read -p "按回车返回..."
 
 sys_clean() {
 clear
-echo -e "\033[33m=== 清理磁盘... ===\033[0m"
 apt autoremove -y
 apt clean
 journalctl --vacuum-size=100M
@@ -121,8 +117,7 @@ read -p "按回车返回..."
 
 docker_menu() {
 clear
-echo -e "\033[33m=== Docker 管理 ===\033[0m"
-echo "1. 查看容器  2. 重启所有  3. 日志  4. 清理镜像"
+echo "1.查看 2.重启全部 3.日志 4.清理镜像"
 read -p "选择：" d
 if [ "$d" = 1 ]; then docker ps -a; fi
 if [ "$d" = 2 ]; then docker restart $(docker ps -q 2>/dev/null); fi
@@ -133,8 +128,7 @@ read -p "按回车返回..."
 
 ssh_menu() {
 clear
-echo -e "\033[33m=== SSH 管理 ===\033[0m"
-echo "1. 修改端口  2. 禁用密码  3. 重启 SSH"
+echo "1.改端口 2.禁密码 3.重启SSH"
 read -p "选择：" s
 if [ "$s" = 1 ]; then read -p "端口：" p; sed -i "s/^#Port 22/Port $p/" /etc/ssh/sshd_config; systemctl restart sshd; fi
 if [ "$s" = 2 ]; then sed -i 's/^PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config; systemctl restart sshd; fi
@@ -144,8 +138,7 @@ read -p "按回车返回..."
 
 firewall_menu() {
 clear
-echo -e "\033[33m=== 防火墙 ===\033[0m"
-echo "1. 放行端口  2. 状态  3. 关闭防火墙"
+echo "1.放行端口 2.状态 3.关闭"
 read -p "选择：" f
 if [ "$f" = 1 ]; then read -p "端口：" pt; ufw allow $pt; fi
 if [ "$f" = 2 ]; then ufw status; fi
@@ -161,7 +154,7 @@ read -p "按回车返回..."
 
 power_menu() {
 clear
-echo "1. 重启  2. 关机  3. 注销"
+echo "1.重启 2.关机 3.注销"
 read -p "选择：" p
 if [ "$p" = 1 ]; then reboot; fi
 if [ "$p" = 2 ]; then poweroff; fi
